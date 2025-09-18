@@ -23,6 +23,7 @@ function SignUp() {
     formState: { errors, isSubmitting },
     reset,
     watch,
+    setError,
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -31,6 +32,10 @@ function SignUp() {
       const url = `/auth/signup`;
       if (!data.FirstName || !data.LastName) {
         throw new Error("First Name and Last Name are required");
+      }
+
+      if (!data.Username) {
+        throw new Error("Username is required");
       }
 
       const response = await axiosInstance.post(url, data);
@@ -50,6 +55,20 @@ function SignUp() {
       }
     } catch (error) {
       console.error(`Signup failed:`, error.response?.data || error.message);
+      const errMsg = error.response?.data?.error || error.message;
+      if (errMsg.toLowerCase().includes("username")) {
+        setError("Username", {
+          type: "manual",
+          message: "Username already exists. Please choose another.",
+        });
+      } else if (errMsg.toLowerCase().includes("email")) {
+        setError("Email", {
+          type: "manual",
+          message: "Email already exists. Please use another.",
+        });
+      } else {
+        toast.error(errMsg);
+      }
       toast.error(error.response?.data?.error || "An error occurred");
     }
   };
@@ -186,6 +205,31 @@ function SignUp() {
               )}
             </div>
           </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="Username"
+            className="block tesxt-sm font-medium text-gray-900 dark:text-gray-300"
+          >
+            Username
+          </label>
+        </div>
+        <div className="mt-2.5">
+          <input
+            id="Username"
+            type="text"
+            placeholder="knight_owl"
+            {...register("Username", {
+              required: "Username is required",
+            })}
+            className="block w-full rounded-xl border bg-transparent border-gray-400 px-3 py-2 text-gray-900 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+          ></input>
+          {errors.Username && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.Username.message}
+            </p>
+          )}
         </div>
 
         <div>
