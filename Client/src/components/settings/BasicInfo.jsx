@@ -56,7 +56,7 @@ export default function BasicInfo() {
         console.error("Error decoding token:", error);
       }
     }
-  }, [user, fetchUserDetails,initialProfileData]);
+  }, [user, fetchUserDetails, initialProfileData]);
 
   useEffect(() => {
     if (!initialProfileData) return;
