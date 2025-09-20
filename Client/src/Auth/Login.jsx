@@ -131,7 +131,7 @@ function Login() {
               {showPassword ? <Eye size={19} /> : <EyeOff size={19} />}
             </Button>
             {errors.Password && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-600 text-sm mt-1">
                 {errors.Password.message}
               </p>
             )}

@@ -241,7 +241,7 @@ function StatsSummary() {
                     }}
                     variant="default"
                     size="default"
-                    className="block w-full text-left px-4 py-2 btn-rad"
+                    className="block w-full text-left px-4 py-2 btn-rad m-2"
                   >
                     {time}
                   </Button>

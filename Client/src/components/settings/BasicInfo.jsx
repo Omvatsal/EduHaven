@@ -6,6 +6,7 @@ import { useUserProfile } from "../../contexts/UserProfileContext";
 import { Camera, User, Trash2 } from "lucide-react";
 import UpdateButton from "./UpdateButton";
 import { CropModal } from "../CropModal";
+import { Button } from "@/components/ui/button";
 
 export default function BasicInfo() {
   const { user, setUser, fetchUserDetails, isBasicInfoComplete } =
@@ -242,14 +243,15 @@ export default function BasicInfo() {
               )}
             </div>
 
-            <button
+            <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="bg-sec hover:bg-[var(--btn-hover)] px-4 py-2 rounded-lg shadow-sm transition-colors hover:text-white"
+              variant="secondary"
+              className="bg-sec hover:bg-[var(--btn-hover)] hover:text-white px-4 py-2 rounded-lg shadow-sm"
               disabled={isProfilePicLoading || isProfileUpdateLoading}
             >
               Change image
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -336,14 +338,16 @@ export default function BasicInfo() {
               disabled={isProfileUpdateLoading}
             />
             {profileData.Bio && (
-              <button
+              <Button
                 type="button"
                 onClick={() => handleClearField("Bio")}
-                className="absolute right-3 top-3 text-[var(--txt-dim)] hover:text-red-500 transition-colors"
+                variant="transparent"
+                size="icon"
+                className="absolute right-3 top-3 text-[var(--txt-dim)] hover:text-red-500 p-1"
                 disabled={isProfileUpdateLoading}
               >
                 <Trash2 className="w-4 h-4" />
-              </button>
+              </Button>
             )}
             <div className="ml-auto w-fit text-xs text-[var(--txt-dim)]">
               <span>{profileData.Bio.length}/500</span>
@@ -372,14 +376,16 @@ export default function BasicInfo() {
                 disabled={isProfileUpdateLoading}
               />
               {profileData.Country && (
-                <button
+                <Button
                   type="button"
                   onClick={() => handleClearField("Country")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--txt-dim)] hover:text-red-500 transition-colors"
+                  variant="transparent"
+                  size="icon"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--txt-dim)] hover:text-red-500 p-1"
                   disabled={isProfileUpdateLoading}
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
           </div>

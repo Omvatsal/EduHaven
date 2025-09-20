@@ -8,6 +8,8 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
 const NoteCard = ({
   note,
   onSelect,
@@ -51,9 +53,8 @@ const NoteCard = ({
           onPin(note?._id, note?.pinnedAt);
         }}
         className={`absolute top-2 right-2 p-1 rounded-full bg-black/10 hover:bg-black/20 transition-opacity
-        ${
-          note?.pinnedAt ? "opacity-100" : hovered ? "opacity-100" : "opacity-0"
-        }`}
+        ${note?.pinnedAt ? "opacity-100" : hovered ? "opacity-100" : "opacity-0"
+          }`}
       >
         <Pin
           size={16}
@@ -94,44 +95,54 @@ const NoteCard = ({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
         >
-          <button
+          <Button
             onClick={() =>
               setShowColorPicker(
                 showColorPicker === note?._id ? null : note?._id
               )
             }
+            variant="transparent"
+            size="icon"
             className="p-1 rounded hover:bg-black/10"
           >
             <Palette size={16} />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => onArchive(note)}
+            variant="transparent"
+            size="icon"
             className="p-1 rounded hover:bg-black/10"
           >
             <Archive size={16} />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => onExport(note)}
+            variant="transparent"
+            size="icon"
             className="p-1 rounded hover:bg-black/10"
           >
             <Download size={16} />
-          </button>
+          </Button>
 
-          <button
+          <Button
             disabled
+            variant="transparent"
+            size="icon"
             className="p-1 rounded opacity-40 cursor-not-allowed"
           >
             <UserPlus size={16} />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => onSendToTrash(note?._id)}
+            variant="transparent"
+            size="icon"
             className="p-1 rounded hover:bg-black/10"
           >
             <Trash2 size={16} />
-          </button>
+          </Button>
         </motion.div>
       )}
 
