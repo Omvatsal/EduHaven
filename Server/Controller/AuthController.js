@@ -7,7 +7,7 @@ import SessionRoom from "../Model/SessionModel.js";
 import TimerSession from "../Model/StudySession.js";
 import Task from "../Model/ToDoModel.js";
 import User from "../Model/UserModel.js";
-import { generateUniqueUsername } from "../utils/generateUsername.js";
+import { createUserWithUniqueUsername } from "../Middlewares/usernameHandler.js";
 
 import generateAuthToken from "../utils/GenerateAuthToken.js";
 import sendMail from "../utils/sendMail.js";
@@ -57,16 +57,15 @@ const googleCallback = async (req, res) => {
     let user = await User.findOne({ Email: email });
     if (!user) {
       const base = email.split("@")[0];
-      const username = await generateUniqueUsername(base);
-      user = await User.create({
+      const userData = {
         FirstName: given_name,
         LastName: family_name,
         Email: email,
         ProfilePicture: picture,
         oauthProvider: "google",
         oauthId,
-        Username:username
-      });
+      };
+      user=await createUserWithUniqueUsername(base, userData);
     }
 
     const appToken = generateAuthToken(user);
@@ -126,7 +125,7 @@ const verifyUser = async (req, res) => {
     await User.create({
       FirstName: verify.user.FirstName,
       LastName: verify.user.LastName,
-      Username:verify.user.Username,
+      Username: verify.user.Username,
       Email: verify.user.Email,
       Password: verify.user.Password,
       ProfilePicture: `https://api.dicebear.com/9.x/initials/svg?seed=${verify.user.FirstName}`,
@@ -156,7 +155,7 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
- 
+
     if (user.Password.startsWith("$2")) {
       const match = await bcrypt.compare(Password, user.Password);
       if (!match) {

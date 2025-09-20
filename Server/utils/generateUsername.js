@@ -1,14 +1,13 @@
-import User from "../Model/UserModel.js";
+import { customAlphabet } from "nanoid";
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
 
-// generate a simple username from email
-export async function generateUniqueUsername(base) {
-  let username = base.replace(/[^a-zA-Z0-9]/g, "").toLowerCase(); // sanitize
-  let count = 1;
-
-  while (await User.exists({ Username:username })) {
-    username = `${username}${count}`;
-    count++;
-  }
-
-  return username;
+// Generate a clean base
+function sanitizeBase(base) {
+  return base.replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
 }
+
+export async function generateUsername(base) {
+  const clean = sanitizeBase(base);
+  return `${clean}_${nanoid()}`; // e.g. "john_ab12x"
+}
+
