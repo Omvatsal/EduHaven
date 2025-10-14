@@ -67,7 +67,6 @@ async function start() {
   try {
     console.log("🚀 Starting server...");
     await ConnectDB();
-
     initSocketHandlers(io);
 
     server.listen(PORT, () => {

@@ -1,6 +1,4 @@
-// components/ProfileCard/ProfileCard.jsx
 import axiosInstance from "@/utils/axios";
-import { jwtDecode } from "jwt-decode";
 import { MessageCircle, ThumbsUp, UserMinus, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -16,12 +14,15 @@ import {
 import FriendsPopup from "./FriendsPopup";
 import ProfileDetails from "./ProfileDetails";
 import ProfileHeader from "./ProfileHeader";
+import { useUserStore } from "@/stores/userStore";
 import ProfileSkeleton from "./ProfileSkeleton";
 import ConfirmRemoveFriendModal from "@/components/ConfirmRemoveFriendModal";
+import { fetchUserDetails } from "@/api/userApi";
 
 const ProfileCard = ({ isCurrentUser = false }) => {
   // ... keep all your state & logic here
   const [user, setUser] = useState(null);
+  const { user: storedUser, setUser: setStoreUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [showRemoveFriendPopup, setShowRemoveFriendPopup] = useState(false);
@@ -139,6 +140,8 @@ const ProfileCard = ({ isCurrentUser = false }) => {
     }
 
     try {
+      console.log("has given kudos: ",hasGivenKudos);
+      console.log("user Id: ",user._id);
       await axiosInstance.post("/user/kudos", {
         receiverId: user._id,
       });
@@ -208,32 +211,31 @@ const ProfileCard = ({ isCurrentUser = false }) => {
     }
   }, [isCurrentUser, userId, refetchFriends]);
 
+  // Fetch user profile if not in store
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        let response;
-        let token = localStorage.getItem("token");
+        let userData;
         if (isCurrentUser) {
-          const decoded = jwtDecode(token);
-          response = await axiosInstance.get(`/user/details?id=${decoded.id}`);
+          userData = storedUser || (await fetchUserDetails());
         } else {
-          response = await axiosInstance.get(`/user/details?id=${userId}`);
+          const res = await fetchUserDetails(userId);
+          userData = res; // adjust depending on API
         }
-
-        // console.log(response);
-
-        setUser(response.data);
-        setKudosCount(response.data.kudosReceived || 0);
-        setHasGivenKudos(response.data.hasGivenKudos || false);
-        setFriendRequestStatus(response.data.relationshipStatus);
+        console.log(userData);
+        setUser(userData);
+        setKudosCount(userData.kudosReceived || 0);
+        setHasGivenKudos(userData.hasGivenKudos || false);
+        setFriendRequestStatus(userData.relationshipStatus);
       } catch (error) {
         console.error("Error fetching user profile:", error);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchUserProfile();
-  }, [isCurrentUser, userId]);
+  }, [isCurrentUser, userId, storedUser, setStoreUser]);
 
   useEffect(() => {
     if (showPopup) {

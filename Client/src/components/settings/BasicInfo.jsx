@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import axiosInstance from "@/utils/axios";
-import { jwtDecode } from "jwt-decode";
-import { useUserProfile } from "../../contexts/UserProfileContext";
 import { useToast } from "../../contexts/ToastContext";
 import { Camera, User, Trash2 } from "lucide-react";
 import UpdateButton from "./UpdateButton";
 import { CropModal } from "../CropModal";
-import { Button } from "@/components/ui/button";
+import { useUserStore } from "@/stores/userStore";
 
 export default function BasicInfo() {
-  const { user, setUser, fetchUserDetails, isBasicInfoComplete } =
-    useUserProfile();
+  const { user, setUser, isBasicInfoComplete } =
+    useUserStore();
   const [profileData, setProfileData] = useState({
     Username: "",
     FirstName: "",
@@ -33,32 +31,22 @@ export default function BasicInfo() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUserId(decoded.id);
-
-        if (!user) {
-          fetchUserDetails(decoded.id);
-        } else if (!initialProfileData) {
-          const userData = {
-            Username: user.Username || "",
-            FirstName: user.FirstName || "",
-            LastName: user.LastName || "",
-            ProfilePicture: user.ProfilePicture || null,
-            Bio: user.Bio || "",
-            Country: user.Country || "",
-            Gender: user.Gender || "",
-          };
-          setProfileData(userData);
-          setInitialProfileData(userData);
-        }
-      } catch (error) {
-        console.error("Error decoding token:", error);
-      }
+    if (!user) return; // no user
+    setUserId(user._id);
+    if (!initialProfileData) {
+      const userData = {
+        Username: user.Username || "",
+        FirstName: user.FirstName || "",
+        LastName: user.LastName || "",
+        ProfilePicture: user.ProfilePicture || null,
+        Bio: user.Bio || "",
+        Country: user.Country || "",
+        Gender: user.Gender || "",
+      };
+      setProfileData(userData);
+      setInitialProfileData(userData);
     }
-  }, [user, fetchUserDetails, initialProfileData]);
+  }, [user, initialProfileData]);
 
   useEffect(() => {
     if (!initialProfileData) return;
@@ -245,15 +233,14 @@ export default function BasicInfo() {
               )}
             </div>
 
-            <Button
+            <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              variant="secondary"
-              className="bg-sec hover:bg-[var(--btn-hover)] hover:text-white px-4 py-2 rounded-lg shadow-sm"
+              className="bg-sec hover:bg-[var(--btn-hover)] px-4 py-2 rounded-lg shadow-sm transition-colors hover:text-white"
               disabled={isProfilePicLoading || isProfileUpdateLoading}
             >
               Change image
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -340,16 +327,14 @@ export default function BasicInfo() {
               disabled={isProfileUpdateLoading}
             />
             {profileData.Bio && (
-              <Button
+              <button
                 type="button"
                 onClick={() => handleClearField("Bio")}
-                variant="transparent"
-                size="icon"
-                className="absolute right-3 top-3 text-[var(--txt-dim)] hover:text-red-500 p-1"
+                className="absolute right-3 top-3 text-[var(--txt-dim)] hover:text-red-500 transition-colors"
                 disabled={isProfileUpdateLoading}
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
+              </button>
             )}
             <div className="ml-auto w-fit text-xs text-[var(--txt-dim)]">
               <span>{profileData.Bio.length}/500</span>
@@ -378,16 +363,14 @@ export default function BasicInfo() {
                 disabled={isProfileUpdateLoading}
               />
               {profileData.Country && (
-                <Button
+                <button
                   type="button"
                   onClick={() => handleClearField("Country")}
-                  variant="transparent"
-                  size="icon"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--txt-dim)] hover:text-red-500 p-1"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--txt-dim)] hover:text-red-500 transition-colors"
                   disabled={isProfileUpdateLoading}
                 >
                   <Trash2 className="w-4 h-4" />
-                </Button>
+                </button>
               )}
             </div>
           </div>
