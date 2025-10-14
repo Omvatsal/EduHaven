@@ -28,8 +28,6 @@ export default function BasicInfo() {
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const { toast } = useToast();
-
   useEffect(() => {
     if (!user) return; // no user
     setUserId(user._id);
