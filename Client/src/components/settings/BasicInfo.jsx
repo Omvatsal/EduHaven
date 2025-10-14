@@ -9,6 +9,7 @@ import { useUserStore } from "@/stores/userStore";
 export default function BasicInfo() {
   const { user, setUser, isBasicInfoComplete } =
     useUserStore();
+   const { toast } = useToast();
   const [profileData, setProfileData] = useState({
     Username: "",
     FirstName: "",
