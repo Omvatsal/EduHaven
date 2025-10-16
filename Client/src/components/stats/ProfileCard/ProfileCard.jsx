@@ -3,12 +3,10 @@ import { MessageCircle, ThumbsUp, UserMinus, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Button } from "@/components/ui/button";
 
 import {
   useAcceptRequest,
   useCancelRequest,
-  useRemoveFriend,
   useSendRequest,
 } from "@/queries/friendQueries";
 import FriendsPopup from "./FriendsPopup";
@@ -25,20 +23,16 @@ const ProfileCard = ({ isCurrentUser = false }) => {
   const { user: storedUser, setUser: setStoreUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
-  const [showRemoveFriendPopup, setShowRemoveFriendPopup] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [showLink, setShowLink] = useState(false);
   const [kudosCount, setKudosCount] = useState(0);
   const [hasGivenKudos, setHasGivenKudos] = useState(false);
   const [friendRequestStatus, setFriendRequestStatus] = useState("Add Friend");
   const [isFriendRequestLoading, setIsFriendRequestLoading] = useState(false);
-  const [userRoom, setUserRoom] = useState([]);
-  const [refetchFriends, setRefetchFriends] = useState(false);
 
   const { mutate: sendRequest } = useSendRequest();
   const { mutate: cancelRequest } = useCancelRequest();
   const { mutate: acceptRequest } = useAcceptRequest();
-  const { mutate: removeFriend } = useRemoveFriend();
 
   const { userId } = useParams();
   const shareRef = useRef(null);
@@ -60,70 +54,21 @@ const ProfileCard = ({ isCurrentUser = false }) => {
       .catch(() => toast.error("Not Copied "));
   };
 
-  const confirmRemove = () => {
-    removeFriend(userId, {
-      onSuccess: () => {
-        setShowRemoveFriendPopup(false);
-        setFriendRequestStatus("Add Friend");
-        setRefetchFriends((prev) => !prev);
-      },
-      onError: (error) => {
-        setShowRemoveFriendPopup(false);
-        toast.error(error.response?.data?.message || "Failed to remove friend");
-      },
-    });
-  };
-
-  const confirmCancel = () => {
-    setShowRemoveFriendPopup(false);
-  };
-
   const handleFriendRequestAction = async () => {
     if (isFriendRequestLoading) return;
 
     setIsFriendRequestLoading(true);
     if (friendRequestStatus === "Add Friend") {
-      sendRequest(userId, {
-        onSuccess: () => {
-          setFriendRequestStatus("Cancel Request");
-          setIsFriendRequestLoading(false);
-        },
-        onError: (error) => {
-          toast.error(
-            error.response?.data?.message || "Failed to send request"
-          );
-          setIsFriendRequestLoading(false);
-        },
-      });
+      sendRequest(userId);
+      setFriendRequestStatus("Cancel Request");
+      setIsFriendRequestLoading(false);
     } else if (friendRequestStatus === "Cancel Request") {
-      cancelRequest(userId, {
-        onSuccess: () => {
-          setFriendRequestStatus("Add Friend");
-          setIsFriendRequestLoading(false);
-        },
-        onError: (error) => {
-          toast.error(
-            error.response?.data?.message || "Failed to cancel request"
-          );
-          setIsFriendRequestLoading(false);
-        },
-      });
+      cancelRequest(userId);
+      setFriendRequestStatus("Add Friend");
+      setIsFriendRequestLoading(false);
     } else if (friendRequestStatus === "Accept Request") {
-      acceptRequest(userId, {
-        onSuccess: () => {
-          setFriendRequestStatus("Friends");
-          setRefetchFriends((prev) => !prev);
-          setIsFriendRequestLoading(false);
-        },
-        onError: (error) => {
-          toast.error(
-            error.response?.data?.message || "Failed to accept request"
-          );
-          setIsFriendRequestLoading(false);
-        },
-      });
-    } else if (friendRequestStatus === "Friends") {
-      setShowRemoveFriendPopup(true);
+      acceptRequest(userId);
+      setFriendRequestStatus("Friends");
       setIsFriendRequestLoading(false);
     }
   };
@@ -209,7 +154,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
     if (isCurrentUser || userId) {
       fetchFriendsForUser();
     }
-  }, [isCurrentUser, userId, refetchFriends]);
+  }, [isCurrentUser, userId]);
 
   // Fetch user profile if not in store
   useEffect(() => {
@@ -287,11 +232,6 @@ const ProfileCard = ({ isCurrentUser = false }) => {
           <h2 className="text-xl font-bold">
             {user.FirstName} {user.LastName}
           </h2>
-          {user?.Username && (
-            <p className="text-[var(--text-secondary)] text-sm mb-2">
-              @{user.Username}
-            </p>
-          )}
           {user?.Bio && (
             <p className="text-[var(--text-secondary)] mb-4 max-w-xs">
               {user.Bio}
@@ -301,60 +241,41 @@ const ProfileCard = ({ isCurrentUser = false }) => {
 
         {!isCurrentUser && (
           <div className="flex flex-wrap justify-center gap-4 my-4">
-            <Button
+            <button
               onClick={handleGiveKudos}
               disabled={isCurrentUser || hasGivenKudos}
-              variant={
-                isCurrentUser || hasGivenKudos ? "transparent" : "default"
-              }
-              className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 ${
+              className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 transition-colors
+              ${
                 isCurrentUser || hasGivenKudos
                   ? "bg-gray-400/30 cursor-not-allowed"
-                  : ""
-              }`}
+                  : "bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
+              }
+                  `}
             >
               <ThumbsUp className="w-5 h-5" />
               <span>{hasGivenKudos ? "Kudos Given" : "Kudos"}</span>
-            </Button>
+            </button>
 
-            <Button
-              variant="default"
-              className="px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
-            >
+            <button className="bg-white/20 hover:bg-white/30 transition-colors text-[var(--text-primary)] px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1">
               <MessageCircle className="w-5 h-5" />
               <span>Chat</span>
-            </Button>
+            </button>
 
-            <Button
+            <button
+              className={`${
+                friendRequestStatus === "Add Friend"
+                  ? "bg-purple-600 hover:bg-purple-700"
+                  : friendRequestStatus === "Cancel Request"
+                    ? "bg-purple-500 hover:bg-purple-600"
+                    : "bg-purple-400 hover:bg-purple-500"
+              }  transition-colors text-white px-6 py-2 h-10 rounded-lg flex items-center space-x-2 w-full sm:w-auto text-center flex-1 text-nowrap cursor-pointer`}
               disabled={isFriendRequestLoading}
               onClick={handleFriendRequestAction}
-              variant="default"
-              className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 w-full sm:w-auto text-center flex-1 text-nowrap cursor-pointer ${
-                friendRequestStatus === "Cancel Request"
-                  ? "bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
-                  : ""
-              }`}
             >
-              {friendRequestStatus === "Cancel Request" ? (
-                <>
-                  <UserMinus className="w-5 h-5" />
-                  <span>{friendRequestStatus}</span>
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-5 h-5" />
-                  <span>{friendRequestStatus}</span>
-                </>
-              )}
-            </Button>
+              <UserPlus className="w-5 h-5" />
+              <span>{friendRequestStatus}</span>
+            </button>
           </div>
-        )}
-
-        {showRemoveFriendPopup && (
-          <ConfirmRemoveFriendModal
-            onConfirm={confirmRemove}
-            onCancel={confirmCancel}
-          />
         )}
       </div>
 
