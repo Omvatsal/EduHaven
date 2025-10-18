@@ -16,9 +16,11 @@ import ProfileDetails from "./ProfileDetails";
 import ProfileHeader from "./ProfileHeader";
 import ProfileSkeleton from "./ProfileSkeleton";
 import ConfirmRemoveFriendModal from "@/components/ConfirmRemoveFriendModal";
+import { useUserStore } from "@/stores/userStore";
 
 const ProfileCard = ({ isCurrentUser = false }) => {
   const [user, setUser] = useState(null);
+  const{user:storedUser, setUser:setStoreUser}= useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [showRemoveFriendPopup, setShowRemoveFriendPopup] = useState(false);
@@ -38,6 +40,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
 
   const { userId } = useParams();
   const shareRef = useRef(null);
+  const popupRef = useRef(null);
   
   const profilelink = user?._id
     ? `${window.location.origin}/user/${user._id}`
