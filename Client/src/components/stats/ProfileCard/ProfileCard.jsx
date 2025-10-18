@@ -1,46 +1,44 @@
 import axiosInstance from "@/utils/axios";
-import { MessageCircle, ThumbsUp, UserPlus } from "lucide-react";
+import { MessageCircle, ThumbsUp, UserMinus, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
+
 import {
   useAcceptRequest,
   useCancelRequest,
+  useRemoveFriend,
   useSendRequest,
 } from "@/queries/friendQueries";
 import FriendsPopup from "./FriendsPopup";
 import ProfileDetails from "./ProfileDetails";
 import ProfileHeader from "./ProfileHeader";
-import { useUserStore } from "@/stores/userStore";
 import ProfileSkeleton from "./ProfileSkeleton";
 import ConfirmRemoveFriendModal from "@/components/ConfirmRemoveFriendModal";
-import { fetchUserDetails } from "@/api/userApi";
 
 const ProfileCard = ({ isCurrentUser = false }) => {
-  // ... keep all your state & logic here
   const [user, setUser] = useState(null);
-  const { user: storedUser, setUser: setStoreUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
-   const [showRemoveFriendPopup, setShowRemoveFriendPopup] = useState(false);
+  const [showRemoveFriendPopup, setShowRemoveFriendPopup] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [showLink, setShowLink] = useState(false);
   const [kudosCount, setKudosCount] = useState(0);
   const [hasGivenKudos, setHasGivenKudos] = useState(false);
   const [friendRequestStatus, setFriendRequestStatus] = useState("Add Friend");
   const [isFriendRequestLoading, setIsFriendRequestLoading] = useState(false);
-    const [userRoom, setUserRoom] = useState([]);
+  const [userRoom, setUserRoom] = useState([]);
   const [refetchFriends, setRefetchFriends] = useState(false);
 
   const { mutate: sendRequest } = useSendRequest();
   const { mutate: cancelRequest } = useCancelRequest();
   const { mutate: acceptRequest } = useAcceptRequest();
+  const { mutate: removeFriend } = useRemoveFriend();
 
   const { userId } = useParams();
   const shareRef = useRef(null);
-  const popupRef = useRef(null);
-
+  
   const profilelink = user?._id
     ? `${window.location.origin}/user/${user._id}`
     : "";
@@ -57,7 +55,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
       .catch(() => toast.error("Not Copied "));
   };
 
-    const confirmRemove = () => {
+  const confirmRemove = () => {
     removeFriend(userId, {
       onSuccess: () => {
         setShowRemoveFriendPopup(false);
@@ -75,8 +73,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
     setShowRemoveFriendPopup(false);
   };
 
-
-const handleFriendRequestAction = async () => {
+  const handleFriendRequestAction = async () => {
     if (isFriendRequestLoading) return;
 
     setIsFriendRequestLoading(true);
@@ -138,8 +135,6 @@ const handleFriendRequestAction = async () => {
     }
 
     try {
-      console.log("has given kudos: ",hasGivenKudos);
-      console.log("user Id: ",user._id);
       await axiosInstance.post("/user/kudos", {
         receiverId: user._id,
       });
@@ -148,7 +143,7 @@ const handleFriendRequestAction = async () => {
       setKudosCount((prev) => prev + 1);
       setHasGivenKudos(true);
     } catch (error) {
-      console.error(error); // incase anything fails
+      console.error(error);
       toast.error(error.response?.data?.message || "Failed to give kudos.");
     }
   };
@@ -167,7 +162,8 @@ const handleFriendRequestAction = async () => {
       };
     }
   }, [showLink]);
- useEffect(() => {
+
+  useEffect(() => {
     const fetchFriendsForUser = async () => {
       try {
         if (isCurrentUser) {
