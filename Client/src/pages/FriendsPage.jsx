@@ -8,7 +8,7 @@ import { useUserStore } from "@/stores/userStore";
 function FriendsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const {user}=useUserStore();
-  const tabs = ["suggested", "friendRequests", "sentRequests", "allFriends"];
+  const tabs = ["findFriends", "friendRequests", "sentRequests", "allFriends"];
   const activeTab = tabs.includes(searchParams.get("tab"))
     ? searchParams.get("tab")
     : "findFriends";

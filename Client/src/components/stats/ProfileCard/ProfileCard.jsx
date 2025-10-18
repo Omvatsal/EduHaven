@@ -3,7 +3,7 @@ import { MessageCircle, ThumbsUp, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import { Button } from "@/components/ui/button";
 import {
   useAcceptRequest,
   useCancelRequest,
@@ -14,6 +14,7 @@ import ProfileDetails from "./ProfileDetails";
 import ProfileHeader from "./ProfileHeader";
 import { useUserStore } from "@/stores/userStore";
 import ProfileSkeleton from "./ProfileSkeleton";
+import ConfirmRemoveFriendModal from "@/components/ConfirmRemoveFriendModal";
 import { fetchUserDetails } from "@/api/userApi";
 
 const ProfileCard = ({ isCurrentUser = false }) => {
@@ -231,6 +232,11 @@ const ProfileCard = ({ isCurrentUser = false }) => {
           <h2 className="text-xl font-bold">
             {user.FirstName} {user.LastName}
           </h2>
+           {user?.Username && (
+            <p className="text-[var(--text-secondary)] text-sm mb-2">
+              @{user.Username}
+            </p>
+          )}
           {user?.Bio && (
             <p className="text-[var(--text-secondary)] mb-4 max-w-xs">
               {user.Bio}
@@ -240,11 +246,13 @@ const ProfileCard = ({ isCurrentUser = false }) => {
 
         {!isCurrentUser && (
           <div className="flex flex-wrap justify-center gap-4 my-4">
-            <button
+              <Button
               onClick={handleGiveKudos}
               disabled={isCurrentUser || hasGivenKudos}
-              className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 transition-colors
-              ${
+              variant={
+                isCurrentUser || hasGivenKudos ? "transparent" : "default"
+              }
+              className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 ${
                 isCurrentUser || hasGivenKudos
                   ? "bg-gray-400/30 cursor-not-allowed"
                   : "bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
@@ -253,28 +261,45 @@ const ProfileCard = ({ isCurrentUser = false }) => {
             >
               <ThumbsUp className="w-5 h-5" />
               <span>{hasGivenKudos ? "Kudos Given" : "Kudos"}</span>
-            </button>
+            </Button>
 
-            <button className="bg-white/20 hover:bg-white/30 transition-colors text-[var(--text-primary)] px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1">
+                <Button
+              variant="default"
+              className="px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
+            >
               <MessageCircle className="w-5 h-5" />
               <span>Chat</span>
-            </button>
+            </Button>
 
-            <button
-              className={`${
-                friendRequestStatus === "Add Friend"
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : friendRequestStatus === "Cancel Request"
-                    ? "bg-purple-500 hover:bg-purple-600"
-                    : "bg-purple-400 hover:bg-purple-500"
-              }  transition-colors text-white px-6 py-2 h-10 rounded-lg flex items-center space-x-2 w-full sm:w-auto text-center flex-1 text-nowrap cursor-pointer`}
+            <Button
               disabled={isFriendRequestLoading}
               onClick={handleFriendRequestAction}
+                variant="default"
+              className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 w-full sm:w-auto text-center flex-1 text-nowrap cursor-pointer ${
+                friendRequestStatus === "Cancel Request"
+                  ? "bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
+                  : ""
+              }`}
             >
-              <UserPlus className="w-5 h-5" />
-              <span>{friendRequestStatus}</span>
-            </button>
+              {friendRequestStatus === "Cancel Request" ? (
+                <>
+                  <UserMinus className="w-5 h-5" />
+                  <span>{friendRequestStatus}</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-5 h-5" />
+                  <span>{friendRequestStatus}</span>
+                </>
+              )}
+            </Button>
           </div>
+        )}
+         {showRemoveFriendPopup && (
+          <ConfirmRemoveFriendModal
+            onConfirm={confirmRemove}
+            onCancel={confirmCancel}
+          />
         )}
       </div>
 
