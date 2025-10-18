@@ -23,12 +23,15 @@ const ProfileCard = ({ isCurrentUser = false }) => {
   const { user: storedUser, setUser: setStoreUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
+   const [showRemoveFriendPopup, setShowRemoveFriendPopup] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [showLink, setShowLink] = useState(false);
   const [kudosCount, setKudosCount] = useState(0);
   const [hasGivenKudos, setHasGivenKudos] = useState(false);
   const [friendRequestStatus, setFriendRequestStatus] = useState("Add Friend");
   const [isFriendRequestLoading, setIsFriendRequestLoading] = useState(false);
+    const [userRoom, setUserRoom] = useState([]);
+  const [refetchFriends, setRefetchFriends] = useState(false);
 
   const { mutate: sendRequest } = useSendRequest();
   const { mutate: cancelRequest } = useCancelRequest();
@@ -54,21 +57,71 @@ const ProfileCard = ({ isCurrentUser = false }) => {
       .catch(() => toast.error("Not Copied "));
   };
 
-  const handleFriendRequestAction = async () => {
+    const confirmRemove = () => {
+    removeFriend(userId, {
+      onSuccess: () => {
+        setShowRemoveFriendPopup(false);
+        setFriendRequestStatus("Add Friend");
+        setRefetchFriends((prev) => !prev);
+      },
+      onError: (error) => {
+        setShowRemoveFriendPopup(false);
+        toast.error(error.response?.data?.message || "Failed to remove friend");
+      },
+    });
+  };
+
+  const confirmCancel = () => {
+    setShowRemoveFriendPopup(false);
+  };
+
+
+const handleFriendRequestAction = async () => {
     if (isFriendRequestLoading) return;
 
     setIsFriendRequestLoading(true);
     if (friendRequestStatus === "Add Friend") {
-      sendRequest(userId);
-      setFriendRequestStatus("Cancel Request");
-      setIsFriendRequestLoading(false);
+      sendRequest(userId, {
+        onSuccess: () => {
+          setFriendRequestStatus("Cancel Request");
+          setIsFriendRequestLoading(false);
+        },
+        onError: (error) => {
+          toast.error(
+            error.response?.data?.message || "Failed to send request"
+          );
+          setIsFriendRequestLoading(false);
+        },
+      });
     } else if (friendRequestStatus === "Cancel Request") {
-      cancelRequest(userId);
-      setFriendRequestStatus("Add Friend");
-      setIsFriendRequestLoading(false);
+      cancelRequest(userId, {
+        onSuccess: () => {
+          setFriendRequestStatus("Add Friend");
+          setIsFriendRequestLoading(false);
+        },
+        onError: (error) => {
+          toast.error(
+            error.response?.data?.message || "Failed to cancel request"
+          );
+          setIsFriendRequestLoading(false);
+        },
+      });
     } else if (friendRequestStatus === "Accept Request") {
-      acceptRequest(userId);
-      setFriendRequestStatus("Friends");
+      acceptRequest(userId, {
+        onSuccess: () => {
+          setFriendRequestStatus("Friends");
+          setRefetchFriends((prev) => !prev);
+          setIsFriendRequestLoading(false);
+        },
+        onError: (error) => {
+          toast.error(
+            error.response?.data?.message || "Failed to accept request"
+          );
+          setIsFriendRequestLoading(false);
+        },
+      });
+    } else if (friendRequestStatus === "Friends") {
+      setShowRemoveFriendPopup(true);
       setIsFriendRequestLoading(false);
     }
   };
@@ -114,13 +167,10 @@ const ProfileCard = ({ isCurrentUser = false }) => {
       };
     }
   }, [showLink]);
-
-  useEffect(() => {
-    // Fetch friends list + count for either current user or the profile user
+ useEffect(() => {
     const fetchFriendsForUser = async () => {
       try {
         if (isCurrentUser) {
-          // Current (logged-in) user — keep using protected endpoints
           try {
             const listRes = await axiosInstance.get("/friends");
 
@@ -137,8 +187,6 @@ const ProfileCard = ({ isCurrentUser = false }) => {
         try {
           const listRes = await axiosInstance.get(`/friends/${userId}/stats`);
           setFriendsList(listRes.data.stats.friends || []);
-
-          // console.log(listRes.data);
         } catch (err) {
           toast.error("Error fetching profile user's friends");
           setFriendsList([]);
@@ -150,11 +198,10 @@ const ProfileCard = ({ isCurrentUser = false }) => {
       }
     };
 
-    // only fetch when we have userId or we are current user
     if (isCurrentUser || userId) {
       fetchFriendsForUser();
     }
-  }, [isCurrentUser, userId]);
+  }, [isCurrentUser, userId, refetchFriends]);
 
   // Fetch user profile if not in store
   useEffect(() => {
@@ -165,7 +212,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
           userData = storedUser || (await fetchUserDetails());
         } else {
           const res = await fetchUserDetails(userId);
-          userData = res; // adjust depending on API
+          userData = res; 
         }
         console.log(userData);
         setUser(userData);
@@ -199,9 +246,8 @@ const ProfileCard = ({ isCurrentUser = false }) => {
 
   if (isLoading || !user) return <ProfileSkeleton />;
 
-  return (
+   return (
     <div className="bg-gradient-to-br from-indigo-500/50 to-purple-500/5 rounded-3xl shadow-md pt-6 w-full h-fit relative overflow-hidden">
-      {/* Header */}
       <ProfileHeader
         isCurrentUser={isCurrentUser}
         user={user}
@@ -213,26 +259,22 @@ const ProfileCard = ({ isCurrentUser = false }) => {
         kudosCount={kudosCount}
         friendsCount={friendsList.length}
         setShowPopup={setShowPopup}
-        popupRef={popupRef}
       />
 
       <div className="mx-4">
-        {/* Friends Popup */}
         <FriendsPopup
           showPopup={showPopup}
           setShowPopup={setShowPopup}
           friendsList={friendsList}
-          popupRef={popupRef}
           user={user}
           kudosCount={kudosCount}
         />
 
-        {/* User Info + Action Buttons + Details */}
         <div className="text-[var(--text-primary)]">
           <h2 className="text-xl font-bold">
             {user.FirstName} {user.LastName}
           </h2>
-           {user?.Username && (
+          {user?.Username && (
             <p className="text-[var(--text-secondary)] text-sm mb-2">
               @{user.Username}
             </p>
@@ -246,7 +288,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
 
         {!isCurrentUser && (
           <div className="flex flex-wrap justify-center gap-4 my-4">
-              <Button
+            <Button
               onClick={handleGiveKudos}
               disabled={isCurrentUser || hasGivenKudos}
               variant={
@@ -255,15 +297,14 @@ const ProfileCard = ({ isCurrentUser = false }) => {
               className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 ${
                 isCurrentUser || hasGivenKudos
                   ? "bg-gray-400/30 cursor-not-allowed"
-                  : "bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
-              }
-                  `}
+                  : ""
+              }`}
             >
               <ThumbsUp className="w-5 h-5" />
               <span>{hasGivenKudos ? "Kudos Given" : "Kudos"}</span>
             </Button>
 
-                <Button
+            <Button
               variant="default"
               className="px-6 py-2 h-10 rounded-lg flex items-center space-x-2 flex-1 bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
             >
@@ -274,7 +315,7 @@ const ProfileCard = ({ isCurrentUser = false }) => {
             <Button
               disabled={isFriendRequestLoading}
               onClick={handleFriendRequestAction}
-                variant="default"
+              variant="default"
               className={`px-6 py-2 h-10 rounded-lg flex items-center space-x-2 w-full sm:w-auto text-center flex-1 text-nowrap cursor-pointer ${
                 friendRequestStatus === "Cancel Request"
                   ? "bg-white/20 hover:bg-white/30 text-[var(--text-primary)]"
@@ -295,7 +336,8 @@ const ProfileCard = ({ isCurrentUser = false }) => {
             </Button>
           </div>
         )}
-         {showRemoveFriendPopup && (
+
+        {showRemoveFriendPopup && (
           <ConfirmRemoveFriendModal
             onConfirm={confirmRemove}
             onCancel={confirmCancel}
