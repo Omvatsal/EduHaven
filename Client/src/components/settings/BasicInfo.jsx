@@ -362,14 +362,16 @@ export default function BasicInfo() {
                 disabled={isProfileUpdateLoading}
               />
               {profileData.Country && (
-                <button
+                <Button
                   type="button"
                   onClick={() => handleClearField("Country")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--txt-dim)] hover:text-red-500 transition-colors"
+                  variant="transparent"
+                  size="icon"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--txt-dim)] hover:text-red-500 p-1"
                   disabled={isProfileUpdateLoading}
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -382,22 +384,40 @@ export default function BasicInfo() {
               Gender
             </label>
             <div className="relative">
-              <select
-                id="gender"
-                name="Gender"
-                value={profileData.Gender}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-[var(--bg-sec)] border border-transparent rounded-lg text-[var(--txt)] focus:outline-none focus:ring-2 focus:ring-[var(--btn)] focus:border-transparent transition-all pr-10"
-                disabled={isProfileUpdateLoading}
-              >
-                <option value="" disabled hidden>
-                  Select Gender
-                </option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-              </select>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    disabled={isProfileUpdateLoading}
+                    className="w-full justify-between px-4 py-3 bg-[var(--bg-sec)] border border-transparent rounded-lg text-[var(--txt)] hover:bg-[var(--bg-ter)] focus:ring-2 focus:ring-[var(--btn)] focus:border-transparent transition-all"
+                  >
+                    {profileData.Gender || "Select Gender"}
+                    <ChevronDown className="w-4 h-4 opacity-70" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align = "start" className="w-full bg-[var(--bg-sec)] border border-gray-700/30 rounded-md shadow-lg">
+                  {["Male", "Female", "Other", "Prefer not to say"].map((option) => (
+                    <DropdownMenuItem
+                      key={option}
+                      onClick={() =>
+                        setProfileData((prev) => ({
+                          ...prev,
+                          Gender: option,
+                        }))
+                      }
+                      className={`cursor-pointer hover:bg-[var(--bg-ter)] ${
+                        profileData.Gender === option
+                          ? "bg-[var(--btn)] text-white"
+                          : "text-[var(--txt)]"
+                      }`}
+                    >
+                      {option}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
